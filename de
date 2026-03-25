@@ -1,0 +1,401 @@
+import React, { useState } from "react";
+
+// ⚠️ SETUP REQUIRED FOR REAL AI:
+// 1. Create a backend API route at /api/ai (example below)
+// 2. Add your OpenAI API key in your backend (NEVER expose it in frontend)
+
+/*
+========== BACKEND EXAMPLE (Node / Next.js API route) ==========
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+export default async function handler(req, res) {
+  const { query } = JSON.parse(req.body);
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user",
+        content: `Explain this in a biblical, accurate, educational way: ${query}`,
+      },
+    ],
+  });
+
+  res.json({ answer: response.choices[0].message.content });
+}
+===============================================================
+*/
+
+const bibleData = {
+  // ================= PEOPLE =================
+  Abraham: {
+    title: "Abraham",
+    description: "Patriarch chosen by God and father of many nations.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Abraham_and_Isaac_Caravaggio.jpg",
+  },
+  Isaac: {
+    title: "Isaac",
+    description: "Son of Abraham and part of God's covenant.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Sacrifice_of_Isaac_Caravaggio.jpg",
+  },
+  Jacob: {
+    title: "Jacob",
+    description: "Also called Israel, father of the twelve tribes.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Jacob_Wrestling_with_the_Angel.jpg",
+  },
+  Joseph: {
+    title: "Joseph",
+    description: "Son of Jacob who became a leader in Egypt.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Joseph_Interpretation_of_Dreams.jpg",
+  },
+  Moses: {
+    title: "Moses",
+    description: "Led the Israelites out of Egypt.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Michelangelo%27s_Moses.jpg",
+  },
+  Joshua: {
+    title: "Joshua",
+    description: "Led Israel into the Promised Land.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/1c/Joshua_Commanding_the_Sun_to_Stand_Still.jpg",
+  },
+  Samson: {
+    title: "Samson",
+    description: "Judge known for great strength.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3f/Samson_and_Delilah.jpg",
+  },
+  Samuel: {
+    title: "Samuel",
+    description: "Prophet who anointed Israel’s first kings.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Samuel_Anointing_David.jpg",
+  },
+  Saul: {
+    title: "King Saul",
+    description: "First king of Israel.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Saul_and_David.jpg",
+  },
+  David: {
+    title: "King David",
+    description: "Defeated Goliath and became king.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Guido_Reni_-_David_with_the_Head_of_Goliath.jpg",
+  },
+  Solomon: {
+    title: "King Solomon",
+    description: "Known for wisdom and building the temple.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/1c/King_Solomon.jpg",
+  },
+  Elijah: {
+    title: "Elijah",
+    description: "Prophet who performed miracles.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/9f/Elijah_raising_the_son_of_the_widow.jpg",
+  },
+  Isaiah: {
+    title: "Isaiah",
+    description: "Major prophet who foretold the Messiah.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Isaiah_Michelangelo.jpg",
+  },
+  Jeremiah: {
+    title: "Jeremiah",
+    description: "Prophet who warned of exile.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Jeremiah_Michelangelo.jpg",
+  },
+  Ezekiel: {
+    title: "Ezekiel",
+    description: "Prophet with powerful visions.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6c/Ezekiel_Michelangelo.jpg",
+  },
+  Daniel: {
+    title: "Daniel",
+    description: "Prophet who survived the lions’ den.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6c/Daniel_in_the_lions%27_den.jpg",
+  },
+
+  Jesus: {
+    title: "Jesus Christ",
+    description: "Central figure of Christianity.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Christ_Pantocrator_Monastery_of_St_Catherine.jpg",
+  },
+  Mary: {
+    title: "Mary",
+    description: "Mother of Jesus.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/1/1d/William-Adolphe_Bouguereau_%281825-1905%29_-_The_Virgin_with_Angels_%281901%29.jpg",
+  },
+  JosephNT: {
+    title: "Joseph (father of Jesus)",
+    description: "Earthly father of Jesus.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Saint_Joseph_with_the_Child_Jesus.jpg",
+  },
+  Peter: {
+    title: "Peter",
+    description: "Leader among Jesus’ disciples.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Saint_Peter_Paul_Rubens.jpg",
+  },
+  John: {
+    title: "John",
+    description: "Disciple and Gospel writer.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Saint_John_the_Evangelist.jpg",
+  },
+  Paul: {
+    title: "Paul",
+    description: "Missionary and letter writer.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3e/Rembrandt_-_Apostle_Paul_-_Google_Art_Project.jpg",
+  },
+  Judas: {
+    title: "Judas Iscariot",
+    description: "Disciple who betrayed Jesus.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6b/Judas_Iscariot.jpg",
+  },
+
+  // ================= EVENTS =================
+  Creation: {
+    title: "Creation",
+    description: "God created the world in six days.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/5b/Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg",
+  },
+  Fall: {
+    title: "The Fall",
+    description: "Adam and Eve disobeyed God.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Masaccio_-_Expulsion_from_the_Garden_of_Eden.jpg",
+  },
+  Noah: {
+    title: "Noah’s Ark",
+    description: "God saved Noah through a flood.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/4/4b/Edward_Hicks_-_Noah%27s_Ark.jpg",
+  },
+  Babel: {
+    title: "Tower of Babel",
+    description: "God confused human languages.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3b/Tower_of_Babel_Bruegel.jpg",
+  },
+  Covenant: {
+    title: "Abraham’s Covenant",
+    description: "God made promises to Abraham.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Abraham_and_Isaac_Caravaggio.jpg",
+  },
+  Exodus: {
+    title: "Exodus from Egypt",
+    description: "Israelites freed from slavery.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Crossing_the_Red_Sea.jpg",
+  },
+  Commandments: {
+    title: "Ten Commandments",
+    description: "God gave laws to Moses.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Moses_Ten_Commandments.jpg",
+  },
+  Jericho: {
+    title: "Battle of Jericho",
+    description: "Walls fell after Israel marched.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/0/0d/Jericho.jpg",
+  },
+  Goliath: {
+    title: "David vs Goliath",
+    description: "David defeated the giant.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Guido_Reni_-_David_with_the_Head_of_Goliath.jpg",
+  },
+  Exile: {
+    title: "Babylonian Exile",
+    description: "Israel taken into captivity.",
+    testament: "Old Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6d/Babylon.jpg",
+  },
+
+  Birth: {
+    title: "Birth of Jesus",
+    description: "Jesus born in Bethlehem.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/99/Nativity.jpg",
+  },
+  Baptism: {
+    title: "Baptism of Jesus",
+    description: "Jesus baptized by John.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Baptism_of_Christ.jpg",
+  },
+  Sermon: {
+    title: "Sermon on the Mount",
+    description: "Jesus taught key principles.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/8/8e/Sermon_on_the_Mount.jpg",
+  },
+  Miracles: {
+    title: "Miracles of Jesus",
+    description: "Jesus performed many miracles.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Christ_healing.jpg",
+  },
+  Crucifixion: {
+    title: "Crucifixion",
+    description: "Jesus was crucified.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Velazquez_Crucifixion.jpg",
+  },
+  Resurrection: {
+    title: "Resurrection",
+    description: "Jesus rose from the dead.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/6f/Resurrection_of_Christ_by_Noel_Coypel.jpg",
+  },
+  Ascension: {
+    title: "Ascension",
+    description: "Jesus ascended into heaven.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/5c/Ascension.jpg",
+  },
+  Pentecost: {
+    title: "Pentecost",
+    description: "Holy Spirit came to the apostles.",
+    testament: "New Testament",
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/5a/Pentecost.jpg",
+  },
+};
+
+export default function BibleExplorer() {
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [aiAnswer, setAiAnswer] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // SMART SEARCH
+  const handleSearch = () => {
+    const filtered = Object.keys(bibleData).filter((key) => {
+      const item = bibleData[key];
+      return (
+        key.toLowerCase().includes(search.toLowerCase()) ||
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description.toLowerCase().includes(search.toLowerCase())
+      );
+    });
+
+    setResults(filtered);
+    setSelected(null);
+    setAiAnswer("");
+  };
+
+  // 🤖 REAL AI SEARCH
+  const handleAISearch = async () => {
+    setLoading(true);
+    setAiAnswer("");
+
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        body: JSON.stringify({ query: search }),
+      });
+
+      const data = await res.json();
+      setAiAnswer(data.answer);
+    } catch (err) {
+      setAiAnswer("Error getting AI response");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div
+      className="min-h-screen p-4"
+      style={{
+        background: "linear-gradient(to bottom right, #1e3a8a, #3b82f6)",
+        fontFamily: "Comfortaa, sans-serif",
+      }}
+    >
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 text-center">
+          Bible Explorer
+        </h1>
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className="p-3 rounded w-full"
+            placeholder="Search anything (e.g. Jesus, faith, sin...)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button
+            onClick={handleSearch}
+            className="bg-white text-blue-700 px-4 py-2 rounded font-semibold"
+          >
+            Search
+          </button>
+          <button
+            onClick={handleAISearch}
+            className="bg-yellow-300 text-black px-4 py-2 rounded font-semibold"
+          >
+            AI Search
+          </button>
+        </div>
+
+        {/* Results */}
+        <div className="mt-4 grid gap-2">
+          {results.map((key) => (
+            <button
+              key={key}
+              onClick={() => setSelected(bibleData[key])}
+              className="bg-white/90 p-3 rounded text-left"
+            >
+              {bibleData[key].title}
+            </button>
+          ))}
+        </div>
+
+        {/* Selected */}
+        {selected && (
+          <div className="mt-6 bg-white p-4 rounded shadow">
+            <h2 className="text-2xl font-bold">{selected.title}</h2>
+            <p className="text-sm text-gray-500 mb-2">
+              {selected.testament}
+            </p>
+            <img
+              src={selected.image}
+              alt={selected.title}
+              className="w-full h-auto my-3 rounded"
+            />
+            <p>{selected.description}</p>
+          </div>
+        )}
+
+        {/* AI Answer */}
+        {(aiAnswer || loading) && (
+          <div className="mt-6 bg-yellow-100 p-4 rounded">
+            <h3 className="font-bold mb-2">AI Explanation</h3>
+            {loading ? <p>Thinking...</p> : <p>{aiAnswer}</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
